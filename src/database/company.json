@@ -1,0 +1,31 @@
+[
+    {
+        "id": 1,
+        "name": "PH Solutions",
+        "age": 2,
+        "employees": [
+            {
+                "id": 1,
+                "name": "Pedro",
+                "age": 25,
+                "job": "Developer",
+                "state": "Santa Catarina"
+            },
+            {
+                "id": 2,
+                "name": "José",
+                "age": 32,
+                "job": "Product Manager",
+                "state": "Rio Grande do Norte"
+            }
+        ],
+        "owner": {
+            "id": 3,
+            "name": "Aderbal",
+            "age": 18,
+            "job": "Intern",
+            "state": "São Paulo"
+        },
+        "state": "Santa Catarina"
+    }
+]
