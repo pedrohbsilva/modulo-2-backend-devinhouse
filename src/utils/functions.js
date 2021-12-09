@@ -10,12 +10,7 @@ function createOrUpdateData(data){
 }
 
 function parseData(updateItem, oldItem){
-    return{
-        name: updateItem.name ? updateItem.name : oldItem.name,
-        age: updateItem.age ? updateItem.age : oldItem.age,
-        job: updateItem.job ? updateItem.job : oldItem.job,
-        state:updateItem.state ? updateItem.state : oldItem.state
-    }
+    return { ...oldItem, ...updateItem }
 }
 
 module.exports = {

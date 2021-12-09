@@ -1,63 +1,83 @@
-const { getData, createOrUpdateData } = require('../utils/functions')
-
+const { getData, createOrUpdateData, parseData } = require('../utils/functions')
+const { translate } = require('../utils/constants')
 module.exports = {
-    async index(req, res) {
-        const companies = getData('company.json')
+    async index(req, res){
+
+        const users = getData()
         
-        return res.status(200).send({companies: companies});
+        return res.status(200).json({users: users})
     },
-
-    async indexOne(req, res) {
-        const { id } = req.params
-        const companies = getData('company.json')
-        const company = companies.filter((item)=> item.id === Number(id))
     
-        return res.status(200).send({company: company});
-    },
-
-    async create(req, res) {
-        const { id, name, age, employees, owner, state } = req.body
-        const companies = getData('company.json')
-        const createNewCompany = [...companies, {
-            id, 
-            name, 
-            age, 
-            employees,
-            owner, 
-            state
-        }]
-        createOrUpdateData('company.json',createNewCompany)
-        return res.status(200).send({message: "Empresa salva com sucesso!"});
-    },
-
-    async updateOne(req, res) {
+    async indexOne(req, res){
         const { id } = req.params
-        const { name, age, job, state} = req.body
-        const companies = getData('company.json')
-        const updateCompaniesList = companies.map((item)=>{
+        const users = getData()
+        try {
+            const user = users.filter((item) => item.id === Number(id))
+        
+            if(user.length === 0){
+                throw new Error('Não tem usuário na lista com esse id')
+            }
+            return res.status(200).json({user: user})
+
+        } catch (error) {
+            console.log(error.message)
+            return res.status(400).json({error: error.message})
+        }
+    },
+
+    async create(req, res){
+        const { name, age, job, state } = req.body;
+        const existKeyValue = Object.keys(req.body).filter((item) => !req.body[item])
+        const translateOptions = existKeyValue.map((item) => translate[item])
+        
+        if(existKeyValue.length >= 1){
+            return res.status(400).send(
+                {message: `É necessário enviar o(s) seguinte(s) ${translateOptions.join(', ')}`}
+                )
+        }
+
+        const users = getData()
+        const createNewUser = [
+            ...users, {
+                id: users.length + 1,
+                name: name,
+                age: age,
+                job: job,
+                state: state
+            }
+        ]
+        createOrUpdateData(createNewUser)
+        return res.status(201).send({message: 'Usuário salvo com sucesso.'})
+    },
+
+    async updateOne(req, res){
+        const { id } = req.params
+        const users = getData()
+        
+        const existUser = users.find((item) => item.id === Number(id))
+        const [ user ] = existUser
+        if(!user){
+            return res.status(400).send({message: "Usuário não encontrado"})
+        }
+        
+        const findOptionForUpdate = Object.keys(req.body).map((item) => {
+            return {
+                [item]: req.body[item]
+            }
+        })
+        
+        const arrayToObject = Object.assign({}, ...findOptionForUpdate)
+
+        const updateUsersList = users.map((item)=>{
             if(item.id === Number(id)){
-                return {
-                    id: id !== undefined ? id : item.id,
-                    name: name !== undefined ? name : item.name,
-                    age: age !== undefined ? age : item.age,
-                    job: job !== undefined ? job : item.job,
-                    state: state !== undefined ? state : item.state                   
-                }
+                return {...parseData(arrayToObject, item)}
             }
             else{
                 return {...item}
             }
         })
-        createOrUpdateData('company.json', updateCompaniesList)
-        return res.status(200).send({message: "Empresa atualizada com sucesso!"});
-    },
+        console.log(updateUsersList)
 
-    async deleteOne(req, res) {
-        const { id } = req.params
-        const companies = getData('company.json')
-        const removeOneCompanyFromUsers = companies.filter((item)=> item.id !== Number(id))
-        createOrUpdateData('company.json', removeOneCompanyFromUsers)
-        return res.status(200).send({message: "Empresa deletada com sucesso!"});
-    },
+        return res.status(200).send({message: "Usuário encontrado"})
+    }
 }
-
