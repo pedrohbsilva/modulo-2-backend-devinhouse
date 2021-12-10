@@ -1,7 +1,7 @@
-const fileSystem = require('fs')
+const fileSystem = require('fs');
 
-function getData(){
-    const result = JSON.parse(fileSystem.readFileSync('src/database/'+'user.json', 'utf8'));
+function getData(fileName){
+    const result = JSON.parse(fileSystem.readFileSync('src/database/'+fileName, 'utf8'));
     return result
 }
 

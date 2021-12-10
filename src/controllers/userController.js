@@ -1,23 +1,19 @@
 const { getData, createOrUpdateData, parseData } = require('../utils/functions')
 const { translate } = require('../utils/constants')
+const userService = require('../services/user.service')
 module.exports = {
     async index(req, res){
 
-        const users = getData()
+        const users = getData('user.json')
         
         return res.status(200).json({users: users})
     },
     
     async indexOne(req, res){
         const { id } = req.params
-        const users = getData()
         try {
-            const user = users.filter((item) => item.id === Number(id))
-        
-            if(user.length === 0){
-                throw new Error('Não tem usuário na lista com esse id')
-            }
-            return res.status(200).json({user: user})
+            const response = await userService.getUserById(id)
+            return res.status(200).json(response)
 
         } catch (error) {
             console.log(error.message)
@@ -36,7 +32,7 @@ module.exports = {
                 )
         }
 
-        const users = getData()
+        const users = getData('user.json')
         const createNewUser = [
             ...users, {
                 id: users.length + 1,
@@ -52,24 +48,19 @@ module.exports = {
 
     async updateOne(req, res){
         const { id } = req.params
-        const users = getData()
+        const users = getData('user.json')
         
-        const existUser = users.filter((item) => item.id === Number(id))
-        const [ user ] = existUser
-        if(!user){
-            return res.status(400).send({message: "Usuário não encontrado"})
-        }
+        const existUser = users.find((item) => item.id === Number(id))
+        
+        const dataForUpdate = req.body
 
-        const findOptionForUpdate = Object.keys(req.body).map((item) => {
-            return {
-                [item]: req.body[item]
-            }
-        })
-        const arrayToObject = Object.assign({}, ...findOptionForUpdate)
+        if(!existUser){
+            return res.status(200).send({message: "Não houve mudança de dados"})
+        }
 
         const updateUsersList = users.map((item)=>{
             if(item.id === Number(id)){
-                return {id: id, ...parseData(arrayToObject, item)}
+                return {...item, ...dataForUpdate}
             }
             else{
                 return {...item}
@@ -79,11 +70,19 @@ module.exports = {
         return res.status(200).send({message: "Usuário encontrado"})
     },
 
-    async deleteOne(req, res) {
-        const { id } = req.params
+    async deleteOne(req, res){
+        const { id } = req.params;
+
         const users = getData('user.json')
-        const removeOneUserFromUsers = users.filter((item)=> item.id !== Number(id))
-        createOrUpdateData('user.json', removeOneUserFromUsers)
-        return res.status(200).send({message: "Usuário deletado com sucesso!"});
-    },
+        const findUser = users.find((item) => item.id === Number(id))
+       
+        if(!findUser){
+            return res.status(400).send({message: "Usuário não pode ser deletado"})
+        }
+
+        const removeOnlyOneUserByUsers = users.filter((item) => item.id !== Number(id))
+  
+        createOrUpdateData(removeOnlyOneUserByUsers)
+        return res.status(200).send({message: "Usuário deletado com sucesso!"})
+    }
 }
