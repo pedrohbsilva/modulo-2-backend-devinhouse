@@ -1,6 +1,7 @@
-const { getData, createOrUpdateData, parseData } = require('../utils/functions')
+const { getData, createOrUpdateData } = require('../utils/functions')
 const { translate } = require('../utils/constants')
 const userService = require('../services/user.service')
+
 module.exports = {
     async index(req, res){
 
@@ -26,10 +27,11 @@ module.exports = {
         const existKeyValue = Object.keys(req.body).filter((item) => !req.body[item])
         const translateOptions = existKeyValue.map((item) => translate[item])
         
-        if(existKeyValue.length >= 1){
+        if(existKeyValue.length < 1){
             return res.status(400).send(
-                {message: `É necessário enviar o(s) seguinte(s) ${translateOptions.join(', ')}`}
-                )
+                {
+                    message: `É necessário enviar o(s) seguinte(s) ${translateOptions.join(', ')}`
+                })
         }
 
         const users = getData('user.json')
@@ -67,7 +69,7 @@ module.exports = {
             }
         })
         createOrUpdateData(updateUsersList)
-        return res.status(200).send({message: "Usuário encontrado"})
+        return res.status(200).send({message: "Usuário atualizado com sucesso."})
     },
 
     async deleteOne(req, res){
@@ -77,12 +79,39 @@ module.exports = {
         const findUser = users.find((item) => item.id === Number(id))
        
         if(!findUser){
-            return res.status(400).send({message: "Usuário não pode ser deletado"})
+            return res.status(400).send({message: "Usuário não pode ser deletado."})
         }
 
         const removeOnlyOneUserByUsers = users.filter((item) => item.id !== Number(id))
   
         createOrUpdateData(removeOnlyOneUserByUsers)
-        return res.status(200).send({message: "Usuário deletado com sucesso!"})
+        return res.status(200).send({message: "Usuário deletado com sucesso."})
+    },
+
+    async getByFilter(req, res){
+        const users = getData('user.json')
+        const { job, state, ageMin, ageMax } = req.query
+        
+        if((ageMin && ageMax) && ageMax < ageMin){
+            return res.status(400).send({message: 'O ageMax não pode ser menor que ageMin'})
+        }
+
+        let filterUsers = users
+
+        if(ageMin || ageMax){
+            filterUsers = filterUsers.filter((item) => {
+                const existAgeMax = ageMax ? item.age <= Number(ageMax) : item.age >= Number(ageMin)
+                const existAgeMin = ageMin ? item.age >= Number(ageMin) : item.age <= Number(ageMax)
+                return existAgeMax && existAgeMin            
+            })
+        }
+        if(state){
+            filterUsers = filterUsers.filter((item) => item.state === state)
+        }
+        if(job){
+            filterUsers = filterUsers.filter((item) => item.job === job)
+        }
+
+        return res.status(200).send({users: filterUsers})
     }
 }

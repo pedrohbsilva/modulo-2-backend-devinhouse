@@ -1,16 +1,11 @@
 const express = require('express')
 const routes = express.Router()
-const userController = require('../controllers/userController')
-const companyController = require('../controllers/companyController')
+const companies = require('./v1/companies.routes')
+const users = require('./v1/users.routes')
 
-routes.get('/users', userController.index)
-routes.get('/user/:id', userController.indexOne)
-routes.post('/user', userController.create)
-routes.patch('/user/:id', userController.updateOne)
-routes.delete('/user/:id', userController.deleteOne)
-
-//////////////////////////////////
-
-routes.get('/companies', companyController.index)
+//users
+routes.use(users)
+//companies
+routes.use(companies)
 
 module.exports = routes

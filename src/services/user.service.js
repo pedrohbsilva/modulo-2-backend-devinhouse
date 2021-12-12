@@ -9,7 +9,7 @@ module.exports = {
             if(!user){
                 throw new Error('Não tem usuário na lista com esse id')
             }
-            return { user: user }
+            return user
 
         } catch (error) {
             console.log(error.message)

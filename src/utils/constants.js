@@ -1,5 +1,5 @@
 const translate = {
-    name: "nome",
+    name: "Nome",
     age: "Idade",
     job: "Trabalho",
     state: "Estado"

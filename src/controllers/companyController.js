@@ -1,83 +1,17 @@
-const { getData, createOrUpdateData, parseData } = require('../utils/functions')
-const { translate } = require('../utils/constants')
+const { getData } = require('../utils/functions')
+const userService = require('../services/user.service')
+
 module.exports = {
     async index(req, res){
+        const companies = getData('company.json')
+        const companiesWithUsers = companies.map(async(item)=> {
+            const employees = await Promise.all(item.employees.map((data)=> userService.getUserById(data.id)))
+            const owner = await userService.getUserById(item.owner.id)
 
-        const users = getData()
-        
-        return res.status(200).json({users: users})
-    },
-    
-    async indexOne(req, res){
-        const { id } = req.params
-        const users = getData()
-        try {
-            const user = users.filter((item) => item.id === Number(id))
-        
-            if(user.length === 0){
-                throw new Error('Não tem usuário na lista com esse id')
-            }
-            return res.status(200).json({user: user})
-
-        } catch (error) {
-            console.log(error.message)
-            return res.status(400).json({error: error.message})
-        }
-    },
-
-    async create(req, res){
-        const { name, age, job, state } = req.body;
-        const existKeyValue = Object.keys(req.body).filter((item) => !req.body[item])
-        const translateOptions = existKeyValue.map((item) => translate[item])
-        
-        if(existKeyValue.length >= 1){
-            return res.status(400).send(
-                {message: `É necessário enviar o(s) seguinte(s) ${translateOptions.join(', ')}`}
-                )
-        }
-
-        const users = getData()
-        const createNewUser = [
-            ...users, {
-                id: users.length + 1,
-                name: name,
-                age: age,
-                job: job,
-                state: state
-            }
-        ]
-        createOrUpdateData(createNewUser)
-        return res.status(201).send({message: 'Usuário salvo com sucesso.'})
-    },
-
-    async updateOne(req, res){
-        const { id } = req.params
-        const users = getData()
-        
-        const existUser = users.find((item) => item.id === Number(id))
-        const [ user ] = existUser
-        if(!user){
-            return res.status(400).send({message: "Usuário não encontrado"})
-        }
-        
-        const findOptionForUpdate = Object.keys(req.body).map((item) => {
-            return {
-                [item]: req.body[item]
-            }
+            return { ...item, employees: employees, owner: owner }
         })
         
-        const arrayToObject = Object.assign({}, ...findOptionForUpdate)
-
-        const updateUsersList = users.map((item)=>{
-            if(item.id === Number(id)){
-                return {...parseData(arrayToObject, item)}
-            }
-            else{
-                return {...item}
-            }
-        })
-        console.log(updateUsersList)
-
-        return res.status(200).send({message: "Usuário encontrado"})
+        const response = await Promise.all(companiesWithUsers)
+        return res.status(200).send(response)
     }
 }
