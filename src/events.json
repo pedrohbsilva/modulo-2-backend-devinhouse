@@ -1,0 +1,44 @@
+[
+    {
+        "id": 1,
+        "name": "Jogo de Futebol",
+        "description": "Jogo do Flamengo e do Inter",
+        "date": "2021-12-15T20:28:03.114Z",
+        "eventPlace": "Estádio Beira Rio",
+        "guests": [
+            {
+                "id": 1
+            },
+            {
+                "id": 2
+            },
+            {
+                "id": 4
+            }
+        ],
+        "owner": {
+            "id": 6
+        }
+    },
+    {
+        "id": 2,
+        "name": "Jogo de Futebol",
+        "description": "Jogo do Grêmio e do Inter",
+        "date": "2021-12-18T20:28:03.114Z",
+        "eventPlace": "Arena do Grêmio",
+        "guests": [
+            {
+                "id": 3
+            },
+            {
+                "id": 4
+            },
+            {
+                "id": 6
+            }
+        ],
+        "owner": {
+            "id": 1
+        }
+    }
+]
