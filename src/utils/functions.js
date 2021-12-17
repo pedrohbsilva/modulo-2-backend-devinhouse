@@ -5,8 +5,8 @@ function getData(fileName){
     return result
 }
 
-function createOrUpdateData(data){
-    fileSystem.writeFileSync('src/database/'+'user.json', JSON.stringify(data));
+function createOrUpdateData(fileName, data){
+    fileSystem.writeFileSync('src/database/'+ fileName, JSON.stringify(data));
 }
 
 module.exports = {
