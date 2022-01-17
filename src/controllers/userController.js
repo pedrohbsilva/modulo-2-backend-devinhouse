@@ -1,6 +1,7 @@
 const { getData, createOrUpdateData } = require('../utils/functions')
 const { translate } = require('../utils/constants')
 const userService = require('../services/user.service')
+const xlsxPopulate = require('xlsx-populate')
 
 module.exports = {
     async index(req, res){
@@ -11,6 +12,7 @@ module.exports = {
     },
     
     async indexOne(req, res){
+        
         const { id } = req.params
         try {
             const response = await userService.getUserById(id)
@@ -26,8 +28,8 @@ module.exports = {
         const { name, age, job, state } = req.body;
         const existKeyValue = Object.keys(req.body).filter((item) => !req.body[item])
         const translateOptions = existKeyValue.map((item) => translate[item])
-        
-        if(existKeyValue.length < 1){
+
+        if(existKeyValue.length > 0){
             return res.status(400).send(
                 {
                     message: `É necessário enviar o(s) seguinte(s) ${translateOptions.join(', ')}`
@@ -44,7 +46,7 @@ module.exports = {
                 state: state
             }
         ]
-        createOrUpdateData(createNewUser)
+        createOrUpdateData('user.json', createNewUser)
         return res.status(201).send({message: 'Usuário salvo com sucesso.'})
     },
 
@@ -113,5 +115,44 @@ module.exports = {
         }
 
         return res.status(200).send({users: filterUsers})
+    },
+    
+    async importUsers(req, res){
+        /*
+          #swagger.consumes = ['multipart/form-data']  
+          #swagger.parameters['file'] = {
+              in: 'formData',
+              type: 'file',
+              required: 'true',
+              description: 'Some description...',
+              accept: '/',
+        } */
+
+        const users = getData('user.json')
+
+        const xlsxData = await xlsxPopulate.fromDataAsync(req.file.buffer)
+        const rows = xlsxData.sheet(0).usedRange().value()
+        const [firstRow] = rows
+
+        const keys = ['name', 'age', 'job', 'state']
+        const existAllKeys = firstRow.every((item, index) => {
+            return keys[index] === item
+        })
+        if(firstRow.length !== 4 || !existAllKeys){
+            return res.status(400).send({message: 'Verificar a nomenclatura ou o total de itens da primeira linha.'})
+        }
+        
+        const filterRows = rows.filter((_, index) => index !== 0)
+        filterRows.map((row)=> {
+            const result = row.map((itemInRow, index) => {
+                return {
+                    [firstRow[index]]: itemInRow ? itemInRow : ''
+                }
+            })
+            users.push(Object.assign({}, {id: users.length + 1}, ...result))
+        })
+
+        createOrUpdateData('user.json', users)
+        return res.status(201).send({message: 'Usuários salvos com sucesso.'})
     }
 }
